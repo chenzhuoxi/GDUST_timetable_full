@@ -1,0 +1,10 @@
+.dart_tool/
+.packages
+build/
+.gradle/
+*.iml
+.idea/
+.vscode/
+*.lock
+!.gitignore
+local.properties

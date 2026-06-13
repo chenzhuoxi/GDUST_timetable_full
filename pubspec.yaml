@@ -1,0 +1,26 @@
+name: gdust_full
+description: GDUST 课表查看工具 Full 版 — CAS 登录 + 自动抓取
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.19.6 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  shared_preferences: ^2.0.17
+  intl: ^0.18.0
+  path_provider: ^2.0.12
+  file_picker: ^5.0.0
+  home_widget: ^0.7.0
+  http: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
