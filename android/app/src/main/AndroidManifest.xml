@@ -2,7 +2,7 @@
     package="com.jikuai.gdust_full">
     <uses-permission android:name="android.permission.INTERNET" />
    <application
-        android:label="课表"
+        android:label="广科课表"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
