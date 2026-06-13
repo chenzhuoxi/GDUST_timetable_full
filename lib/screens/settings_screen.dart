@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/course.dart';
 import '../services/local_timetable_service.dart';
 import '../services/auth_service.dart';
+import '../services/update_service.dart';
 import 'login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -110,6 +112,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _checkUpdate() async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(children: [
+          SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+          SizedBox(width: 12),
+          Text('正在检查更新...'),
+        ]),
+        duration: Duration(seconds: 10),
+      ),
+    );
+
+    final info = await UpdateService.checkUpdate();
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    if (info.hasUpdate) {
+      _showUpdateDialog(info);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('已是最新版本 ✓')),
+      );
+    }
+  }
+
+  void _showUpdateDialog(UpdateInfo info) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(children: [
+          Icon(Icons.system_update, color: Colors.orange),
+          SizedBox(width: 8),
+          Text('发现新版本'),
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('当前: v${info.currentVersion}  →  最新: v${info.latestVersion}'),
+            if (info.releaseNotes != null && info.releaseNotes!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 200),
+                child: SingleChildScrollView(
+                  child: Text(
+                    info.releaseNotes!,
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('以后再说'),
+          ),
+          FilledButton.icon(
+            icon: const Icon(Icons.download, size: 18),
+            label: const Text('去下载'),
+            onPressed: () {
+              Navigator.pop(ctx);
+              launchUrl(Uri.parse(info.downloadUrl),
+                  mode: LaunchMode.externalApplication);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,10 +242,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           const _SectionHeader('关于'),
-          const ListTile(
-            leading: Icon(Icons.info_outline),
-            title: Text('课表 Full'),
-            subtitle: Text('版本 1.0.0\nCAS 登录 + 自动抓取 + 桌面小组件'),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('课表 Full'),
+            subtitle: const Text('版本 1.0.5\nCAS 登录 + 自动抓取 + 桌面小组件'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.system_update_alt),
+            title: const Text('检查更新'),
+            subtitle: Text('当前版本 1.0.5'),
+            onTap: _checkUpdate,
           ),
         ],
       ),

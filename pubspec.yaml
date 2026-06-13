@@ -1,7 +1,7 @@
 name: gdust_full
 description: GDUST 课表查看工具 Full 版 — CAS 登录 + 自动抓取
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.6+6
 
 environment:
   sdk: '>=2.19.6 <4.0.0'
@@ -16,6 +16,7 @@ dependencies:
   file_picker: ^5.0.0
   home_widget: ^0.7.0
   http: ^1.1.0
+  url_launcher: ^6.1.0
 
 dev_dependencies:
   flutter_test:

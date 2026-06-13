@@ -8,3 +8,7 @@ build/
 *.lock
 !.gitignore
 local.properties
+
+# FVM Version Cache
+.fvm/*.apk
+.fvm/
