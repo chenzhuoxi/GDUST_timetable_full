@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -156,11 +158,15 @@ class _TimetablePageState extends State<TimetablePage> {
         await TimetableService.fetchWeek(token, jobNumber, 1);
       } catch (e) {
         final msg = e.toString();
-        if (msg.contains('401') || msg.contains('Unauthorized') || msg.contains('token') || msg.contains('Token')) {
+        // token 过期通常返回 500 或 401，统一弹登录弹窗让用户更新 token
+        if (msg.contains('500') || msg.contains('401') || msg.contains('Unauthorized') ||
+            msg.contains('token') || msg.contains('Token') || msg.contains('失败')) {
           setState(() { _statusMsg = 'Token 已过期，请重新登录'; });
-          Future.delayed(const Duration(seconds: 2), () {
-            if (mounted) _navigateToLogin();
-          });
+          final updated = await _showTokenUpdateDialog();
+          if (updated == true) {
+            // token 更新成功，重新同步
+            await _fetchFromServer();
+          }
           return;
         }
         // 其他错误（如网络问题）也停止，不覆盖缓存
@@ -199,6 +205,143 @@ class _TimetablePageState extends State<TimetablePage> {
     if (result == true) {
       await _fetchFromServer();
     }
+  }
+
+  /// Token 过期时弹出登录弹窗，直接更新 token
+  Future<bool?> _showTokenUpdateDialog() async {
+    final jobCtrl = TextEditingController();
+    final pwdCtrl = TextEditingController();
+    final codeCtrl = TextEditingController();
+    final codeFocusNode = FocusNode();
+    String? uuid;
+    Uint8List? captchaBytes;
+    bool loadingCode = false;
+    bool loggingIn = false;
+    String? error;
+
+    // 预填学号
+    final jobNumber = await AuthService.getJobNumber();
+    if (jobNumber != null) jobCtrl.text = jobNumber;
+
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            Future<void> fetchCode() async {
+              setDialogState(() { loadingCode = true; error = null; });
+              try {
+                final result = await AuthService.getLoginCode();
+                uuid = result['uuid'];
+                final b64 = result['codeUrl']!;
+                final pure = b64.contains(',') ? b64.split(',').last : b64;
+                setDialogState(() { captchaBytes = base64.decode(pure); });
+                // 聚焦验证码输入框
+                FocusScope.of(ctx).requestFocus(codeFocusNode);
+              } catch (e) {
+                setDialogState(() { error = '获取验证码失败: $e'; });
+              } finally {
+                setDialogState(() { loadingCode = false; });
+              }
+            }
+
+            Future<void> doLogin() async {
+              if (jobCtrl.text.isEmpty || pwdCtrl.text.isEmpty || codeCtrl.text.isEmpty || uuid == null) {
+                setDialogState(() { error = '请填写完整信息并获取验证码'; });
+                return;
+              }
+              setDialogState(() { loggingIn = true; error = null; });
+              try {
+                final tgc = await AuthService.loginByAccount(
+                  jobCtrl.text.trim(), pwdCtrl.text.trim(),
+                  codeCtrl.text.trim(), uuid!,
+                );
+                final result = await AuthService.exchangeToken(tgc);
+                await AuthService.saveLogin(result.token, jobNumber: jobCtrl.text.trim());
+                if (ctx.mounted) Navigator.pop(ctx, true);
+              } catch (e) {
+                setDialogState(() {
+                  error = e.toString().replaceAll('Exception: ', '');
+                });
+                fetchCode();
+              } finally {
+                setDialogState(() { loggingIn = false; });
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Token 已过期'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('请重新登录以更新 Token', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: jobCtrl,
+                      decoration: const InputDecoration(labelText: '学号', border: OutlineInputBorder(), isDense: true),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: pwdCtrl,
+                      decoration: const InputDecoration(labelText: '密码', border: OutlineInputBorder(), isDense: true),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: codeCtrl,
+                            focusNode: codeFocusNode,
+                            decoration: const InputDecoration(labelText: '验证码', border: OutlineInputBorder(), isDense: true),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: loadingCode ? null : fetchCode,
+                          child: Container(
+                            width: 100,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade400),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: loadingCode
+                                ? const Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
+                                : captchaBytes != null
+                                    ? ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.memory(captchaBytes!, fit: BoxFit.cover))
+                                    : const Center(child: Text('获取验证码', style: TextStyle(fontSize: 11))),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (error != null) ...[
+                      const SizedBox(height: 8),
+                      Text(error!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('取消'),
+                ),
+                FilledButton(
+                  onPressed: loggingIn ? null : doLogin,
+                  child: loggingIn
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('登录'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _updateHomeWidget() async {
