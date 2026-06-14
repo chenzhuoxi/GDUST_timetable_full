@@ -56,8 +56,6 @@ class _TimetablePageState extends State<TimetablePage> {
   bool _mergeCourses = false;
   late PageController _weekdayPageController;
   bool _pageControllerReady = false;
-  bool _showUpdateBanner = false;
-  UpdateInfo? _updateInfo;
 
   @override
   void initState() {
@@ -108,19 +106,6 @@ class _TimetablePageState extends State<TimetablePage> {
     // 有缓存就不抓，没缓存自动抓
     if (!loaded || _loadedEmpty) {
       await _fetchFromServer();
-    }
-    // 启动后静默检查更新
-    _silentCheckUpdate();
-  }
-
-  Future<void> _silentCheckUpdate() async {
-    final info = await UpdateService.checkUpdate();
-    if (!mounted) return;
-    if (info.hasUpdate) {
-      setState(() {
-        _showUpdateBanner = true;
-        _updateInfo = info;
-      });
     }
   }
 
@@ -531,7 +516,6 @@ class _TimetablePageState extends State<TimetablePage> {
       ),
       body: Column(
         children: [
-          if (_showUpdateBanner && _updateInfo != null) _buildUpdateBanner(),
           Expanded(child: _buildBody(selectedWeek)),
         ],
       ),
@@ -580,36 +564,6 @@ class _TimetablePageState extends State<TimetablePage> {
           });
         }
       },
-    );
-  }
-
-  Widget _buildUpdateBanner() {
-    final info = _updateInfo!;
-    return MaterialBanner(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      content: Text(
-        '发现新版本 v${info.latestVersion}（当前 v${info.currentVersion}）',
-        style: const TextStyle(fontSize: 13),
-      ),
-      leading: const Icon(Icons.system_update, color: Colors.orange),
-      backgroundColor: Colors.orange.shade50,
-      actions: [
-        TextButton(
-          onPressed: () => setState(() => _showUpdateBanner = false),
-          child: const Text('忽略'),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            minimumSize: const Size(0, 32),
-          ),
-          onPressed: () => launchUrl(
-            Uri.parse(info.downloadUrl),
-            mode: LaunchMode.externalApplication,
-          ),
-          child: const Text('下载', style: TextStyle(fontSize: 13)),
-        ),
-      ],
     );
   }
 

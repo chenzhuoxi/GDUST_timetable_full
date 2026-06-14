@@ -2,8 +2,8 @@ package com.jikuai.gdust_full
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.content.Intent
 import android.os.Build
-import android.os.Bundle
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -16,29 +16,34 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
                 if (call.method == "addWidget") {
-                    pinWidget(result)
+                    addWidget(result)
                 } else {
                     result.notImplemented()
                 }
             }
     }
 
-    private fun pinWidget(result: MethodChannel.Result) {
+    private fun addWidget(result: MethodChannel.Result) {
+        // Android 8.0+ 尝试直接 pin
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val appWidgetManager = AppWidgetManager.getInstance(this)
             if (appWidgetManager.isRequestPinAppWidgetSupported) {
-                // 优先添加 4×2 标准小组件
                 val provider = ComponentName(this, MediumWidgetProvider::class.java)
-                val pinned = appWidgetManager.requestPinAppWidget(provider, null, null)
-                if (pinned) {
-                    result.success("正在添加小组件到桌面…")
-                } else {
-                    result.success("请长按桌面空白处 → 小组件 → 搜索「广科课表」")
+                val success = appWidgetManager.requestPinAppWidget(provider, null, null)
+                if (success) {
+                    result.success("小组件已添加到桌面")
+                    return
                 }
-            } else {
-                result.success("请长按桌面空白处 → 小组件 → 搜索「广科课表」")
             }
-        } else {
+        }
+        // fallback: 打开系统小组件选择器
+        try {
+            val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_PICK).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+            result.success("请在列表中搜索「广科课表」")
+        } catch (e: Exception) {
             result.success("请长按桌面空白处 → 小组件 → 搜索「广科课表」")
         }
     }

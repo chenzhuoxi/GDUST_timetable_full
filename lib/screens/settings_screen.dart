@@ -271,13 +271,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const _SectionHeader('关于'),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('课表 Full'),
-            subtitle: const Text('版本 1.0.7\nCAS 登录 + 自动抓取 + 多尺寸小组件'),
+            title: const Text('广科课表 Full v1.0.7'),
+            subtitle: const Text('点击查看 GitHub 项目'),
+            onTap: () => launchUrl(
+              Uri.parse('https://github.com/chenzhuoxi/GDUST_timetable_full'),
+              mode: LaunchMode.externalApplication,
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.system_update_alt),
             title: const Text('检查更新'),
-            subtitle: const Text('当前版本 1.0.7'),
             onTap: _checkUpdate,
           ),
         ],
