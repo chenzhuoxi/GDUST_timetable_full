@@ -52,6 +52,18 @@
 
         <!-- 桌面小组件 -->
 
+        <!-- 测试小组件（最简配置） -->
+        <receiver
+            android:name=".TestWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_test_info" />
+        </receiver>
+
         <!-- 2×2 紧凑小组件 -->
         <receiver
             android:name=".CompactWidgetProvider"
