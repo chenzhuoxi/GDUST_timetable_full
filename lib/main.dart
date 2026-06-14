@@ -375,10 +375,21 @@ class _TimetablePageState extends State<TimetablePage> {
         if (week1Str != null) {
           await HomeWidget.saveWidgetData<String>('week1_monday', week1Str);
         }
+        // 更新 3 种尺寸的小组件
         await HomeWidget.updateWidget(
-          name: 'TimetableWidgetProvider',
-          androidName: 'TimetableWidgetProvider',
-          qualifiedAndroidName: 'com.jikuai.gdust_full.TimetableWidgetProvider',
+          name: 'CompactWidgetProvider',
+          androidName: 'CompactWidgetProvider',
+          qualifiedAndroidName: 'com.jikuai.gdust_full.CompactWidgetProvider',
+        );
+        await HomeWidget.updateWidget(
+          name: 'MediumWidgetProvider',
+          androidName: 'MediumWidgetProvider',
+          qualifiedAndroidName: 'com.jikuai.gdust_full.MediumWidgetProvider',
+        );
+        await HomeWidget.updateWidget(
+          name: 'LargeWidgetProvider',
+          androidName: 'LargeWidgetProvider',
+          qualifiedAndroidName: 'com.jikuai.gdust_full.LargeWidgetProvider',
         );
       }
     } catch (_) {}

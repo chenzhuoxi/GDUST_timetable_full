@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg"
+    android:gravity="center"
+    android:padding="16dp">
+
+    <!-- 周次 + 星期 -->
+    <TextView
+        android:id="@+id/widget_compact_weekday"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="周一"
+        android:textSize="13sp"
+        android:textColor="@color/widget_week_color"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 课程节数 -->
+    <TextView
+        android:id="@+id/widget_compact_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0 节课"
+        android:textSize="22sp"
+        android:textColor="@color/widget_title_color"
+        android:textStyle="bold"
+        android:layout_marginBottom="6dp" />
+
+    <!-- 下一节课 -->
+    <TextView
+        android:id="@+id/widget_compact_next"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="今天没有课程 🎉"
+        android:textSize="11sp"
+        android:textColor="@color/widget_courses_color"
+        android:gravity="center"
+        android:maxLines="2"
+        android:ellipsize="end" />
+
+</LinearLayout>
