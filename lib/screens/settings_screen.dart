@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/course.dart';
@@ -106,6 +107,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('重新登录成功')),
+        );
+      }
+    }
+  }
+
+  Future<void> _addWidget() async {
+    try {
+      const channel = MethodChannel('com.jikuai.gdust_full/widget');
+      final result = await channel.invokeMethod<String>('addWidget');
+      if (mounted && result != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('请长按桌面空白处 → 小组件 → 搜索「广科课表」')),
         );
       }
     }
@@ -237,6 +256,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('退出登录', style: TextStyle(color: Colors.red)),
             onTap: _logout,
+          ),
+          const Divider(),
+
+          const _SectionHeader('小组件'),
+          ListTile(
+            leading: const Icon(Icons.widgets_outlined),
+            title: const Text('添加桌面小组件'),
+            subtitle: const Text('2×2 今日概览 / 4×2 今日课表 / 4×4 详细课表'),
+            onTap: _addWidget,
           ),
           const Divider(),
 
