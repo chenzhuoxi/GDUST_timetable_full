@@ -24,7 +24,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   DateTime? _week1Monday;
   String? _jobNumber;
-
   @override
   void initState() {
     super.initState();
@@ -245,12 +244,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('课表 Full'),
-            subtitle: const Text('版本 1.0.5\nCAS 登录 + 自动抓取 + 桌面小组件'),
+            subtitle: const Text('版本 1.0.7\nCAS 登录 + 自动抓取 + 桌面小组件'),
           ),
           ListTile(
             leading: const Icon(Icons.system_update_alt),
             title: const Text('检查更新'),
-            subtitle: Text('当前版本 1.0.5'),
+            subtitle: const Text('当前版本 1.0.7'),
             onTap: _checkUpdate,
           ),
         ],
