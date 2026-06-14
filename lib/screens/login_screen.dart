@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,19 +15,52 @@ class _LoginScreenState extends State<LoginScreen> {
   final _jobCtrl = TextEditingController();
   final _pwdCtrl = TextEditingController();
   final _codeCtrl = TextEditingController();
+  final _codeFocusNode = FocusNode();
 
   String? _uuid;
   Uint8List? _captchaBytes;
   bool _loadingCode = false;
   bool _loggingIn = false;
+  bool _rememberPwd = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    AuthService.getJobNumber().then((j) {
-      if (j != null && j.isNotEmpty) _jobCtrl.text = j;
-    });
+    _loadSavedInfo();
+  }
+
+  Future<void> _loadSavedInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jobNumber = prefs.getString('job_number');
+    if (jobNumber != null && jobNumber.isNotEmpty) {
+      _jobCtrl.text = jobNumber;
+    }
+    // 检查保存的密码是否在 30 天内
+    final savedPwd = prefs.getString('saved_password');
+    final savedAt = prefs.getString('password_saved_at');
+    if (savedPwd != null && savedAt != null) {
+      final savedTime = DateTime.tryParse(savedAt);
+      if (savedTime != null && DateTime.now().difference(savedTime).inDays <= 30) {
+        _pwdCtrl.text = savedPwd;
+        setState(() => _rememberPwd = true);
+      } else {
+        // 超过 30 天，清除
+        await prefs.remove('saved_password');
+        await prefs.remove('password_saved_at');
+      }
+    }
+  }
+
+  Future<void> _savePasswordIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_rememberPwd) {
+      await prefs.setString('saved_password', _pwdCtrl.text);
+      await prefs.setString('password_saved_at', DateTime.now().toIso8601String());
+    } else {
+      await prefs.remove('saved_password');
+      await prefs.remove('password_saved_at');
+    }
   }
 
   @override
@@ -34,6 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _jobCtrl.dispose();
     _pwdCtrl.dispose();
     _codeCtrl.dispose();
+    _codeFocusNode.dispose();
     super.dispose();
   }
 
@@ -45,6 +80,10 @@ class _LoginScreenState extends State<LoginScreen> {
       final b64 = result['codeUrl']!;
       final pure = b64.contains(',') ? b64.split(',').last : b64;
       setState(() { _captchaBytes = base64.decode(pure); });
+      // 获取验证码后自动聚焦到验证码输入框
+      if (mounted) {
+        FocusScope.of(context).requestFocus(_codeFocusNode);
+      }
     } catch (e) {
       setState(() { _error = '获取验证码失败: $e'; });
     } finally {
@@ -80,6 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       final result = await AuthService.exchangeToken(tgc);
       await AuthService.saveLogin(result.token, jobNumber: _jobCtrl.text.trim());
+      await _savePasswordIfNeeded();
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       setState(() { _error = _friendlyError(e); });
@@ -124,7 +164,19 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               obscureText: true,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
+
+            // 记住密码
+            CheckboxListTile(
+              value: _rememberPwd,
+              onChanged: (v) => setState(() => _rememberPwd = v ?? false),
+              title: const Text('记住密码（30 天有效）', style: TextStyle(fontSize: 13)),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              controlAffinity: ListTileControlAffinity.leading,
+              visualDensity: VisualDensity.compact,
+            ),
+            const SizedBox(height: 4),
 
             // 校内直连模式提示
             Container(
@@ -150,6 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Expanded(
                   child: TextField(
                     controller: _codeCtrl,
+                    focusNode: _codeFocusNode,
                     decoration: const InputDecoration(
                       labelText: '验证码',
                       prefixIcon: Icon(Icons.verified),

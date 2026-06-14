@@ -126,6 +126,22 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   Future<void> _fetchFromServer() async {
+    // 已有数据时先确认
+    if (loaded && timetable.isNotEmpty) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('同步课表'),
+          content: const Text('将从服务器重新拉取课表，覆盖当前数据。\n\n是否继续？'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('确认')),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
     setState(() => _statusMsg = '正在从服务器获取课表...');
     try {
       final token = await AuthService.getToken();
@@ -134,6 +150,24 @@ class _TimetablePageState extends State<TimetablePage> {
         setState(() { _statusMsg = '未登录'; _loadedEmpty = true; });
         return;
       }
+
+      // 先验证 token 是否有效（试抓第 1 周）
+      try {
+        await TimetableService.fetchWeek(token, jobNumber, 1);
+      } catch (e) {
+        final msg = e.toString();
+        if (msg.contains('401') || msg.contains('Unauthorized') || msg.contains('token') || msg.contains('Token')) {
+          setState(() { _statusMsg = 'Token 已过期，请重新登录'; });
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) _navigateToLogin();
+          });
+          return;
+        }
+        // 其他错误（如网络问题）也停止，不覆盖缓存
+        setState(() { _statusMsg = '同步失败: $msg'; });
+        return;
+      }
+
       final data = await TimetableService.fetchAllWeeks(token, jobNumber);
       if (data.isNotEmpty) {
         await TimetableService.cacheTimetable(data);
@@ -147,7 +181,7 @@ class _TimetablePageState extends State<TimetablePage> {
         _updateCountdown();
         _updateHomeWidget();
       } else {
-        setState(() { _statusMsg = '服务器无数据'; _loadedEmpty = true; });
+        setState(() { _statusMsg = '未获取到课表数据，已保留本地缓存'; });
       }
     } catch (e) {
       setState(() => _statusMsg = '同步失败: $e');
@@ -155,6 +189,16 @@ class _TimetablePageState extends State<TimetablePage> {
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) setState(() => _statusMsg = null);
     });
+  }
+
+  Future<void> _navigateToLogin() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+    if (result == true) {
+      await _fetchFromServer();
+    }
   }
 
   Future<void> _updateHomeWidget() async {
