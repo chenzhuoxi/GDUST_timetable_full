@@ -25,9 +25,12 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   DateTime? _week1Monday;
   String? _jobNumber;
+  late bool _mergeCourses;
+
   @override
   void initState() {
     super.initState();
+    _mergeCourses = widget.mergeCourses;
     _loadWeek1();
     _loadJobNumber();
   }
@@ -118,13 +121,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final result = await channel.invokeMethod<String>('addWidget');
       if (mounted && result != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result)),
+          SnackBar(content: Text(result), duration: const Duration(seconds: 4)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('请长按桌面空白处 → 小组件 → 搜索「广科课表」')),
+          const SnackBar(
+            content: Text('请长按桌面空白处 → 小组件 → 搜索「广科课表」'),
+            duration: Duration(seconds: 4),
+          ),
         );
       }
     }
@@ -240,8 +246,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SwitchListTile(
             title: const Text('合并连续课程'),
             subtitle: const Text('将同一课程的连续小节合并显示'),
-            value: widget.mergeCourses,
-            onChanged: widget.onMergeChanged,
+            value: _mergeCourses,
+            onChanged: (v) {
+              setState(() => _mergeCourses = v);
+              widget.onMergeChanged(v);
+            },
           ),
           const Divider(),
 
@@ -271,7 +280,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const _SectionHeader('关于'),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('广科课表 Full v1.0.8'),
+            title: const Text('广科课表 Full v1.0.9'),
             subtitle: const Text('点击查看 GitHub 项目'),
             onTap: () => launchUrl(
               Uri.parse('https://github.com/chenzhuoxi/GDUST_timetable_full'),

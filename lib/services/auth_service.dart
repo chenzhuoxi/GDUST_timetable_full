@@ -71,12 +71,16 @@ class AuthService {
   }
 
   /// 保存登录信息
-  static Future<void> saveLogin(String token, {String? jobNumber}) async {
+  static Future<void> saveLogin(String token, {String? jobNumber, String? password}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
     await prefs.setString('token_updated_at', DateTime.now().toIso8601String());
     if (jobNumber != null) {
       await prefs.setString('job_number', jobNumber);
+    }
+    if (password != null) {
+      await prefs.setString('saved_password', password);
+      await prefs.setString('password_saved_at', DateTime.now().toIso8601String());
     }
   }
 
@@ -95,11 +99,18 @@ class AuthService {
     return prefs.getString('auth_token') != null;
   }
 
+  static Future<String?> getPassword() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('saved_password');
+  }
+
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('token_updated_at');
     await prefs.remove('job_number');
+    await prefs.remove('saved_password');
+    await prefs.remove('password_saved_at');
     await prefs.remove('vpn_cookies');
   }
 }

@@ -225,9 +225,11 @@ class _TimetablePageState extends State<TimetablePage> {
     bool loggingIn = false;
     String? error;
 
-    // 预填学号
+    // 预填学号和记住的密码
     final jobNumber = await AuthService.getJobNumber();
     if (jobNumber != null) jobCtrl.text = jobNumber;
+    final savedPwd = await AuthService.getPassword();
+    if (savedPwd != null) pwdCtrl.text = savedPwd;
 
     return showDialog<bool>(
       context: context,
@@ -264,7 +266,7 @@ class _TimetablePageState extends State<TimetablePage> {
                   codeCtrl.text.trim(), uuid!,
                 );
                 final result = await AuthService.exchangeToken(tgc);
-                await AuthService.saveLogin(result.token, jobNumber: jobCtrl.text.trim());
+                await AuthService.saveLogin(result.token, jobNumber: jobCtrl.text.trim(), password: pwdCtrl.text.trim());
                 if (ctx.mounted) Navigator.pop(ctx, true);
               } catch (e) {
                 setDialogState(() {
@@ -296,33 +298,28 @@ class _TimetablePageState extends State<TimetablePage> {
                       obscureText: true,
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: codeCtrl,
-                            focusNode: codeFocusNode,
-                            decoration: const InputDecoration(labelText: '验证码', border: OutlineInputBorder(), isDense: true),
-                          ),
+                    // 验证码图片单独一行，自适应宽度
+                    GestureDetector(
+                      onTap: loadingCode ? null : fetchCode,
+                      child: Container(
+                        width: double.infinity,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade400),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: loadingCode ? null : fetchCode,
-                          child: Container(
-                            width: 100,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade400),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: loadingCode
-                                ? const Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
-                                : captchaBytes != null
-                                    ? ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.memory(captchaBytes!, fit: BoxFit.cover))
-                                    : const Center(child: Text('获取验证码', style: TextStyle(fontSize: 11))),
-                          ),
-                        ),
-                      ],
+                        child: loadingCode
+                            ? const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
+                            : captchaBytes != null
+                                ? ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.memory(captchaBytes!, fit: BoxFit.contain))
+                                : const Center(child: Text('点击获取验证码', style: TextStyle(fontSize: 12, color: Colors.grey))),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: codeCtrl,
+                      focusNode: codeFocusNode,
+                      decoration: const InputDecoration(labelText: '验证码', border: OutlineInputBorder(), isDense: true),
                     ),
                     if (error != null) ...[
                       const SizedBox(height: 8),
@@ -473,7 +470,7 @@ class _TimetablePageState extends State<TimetablePage> {
   Widget build(BuildContext context) {
     final currentWeek = currentTeachingWeek();
 
-    return Scaffold(
+    final body = Scaffold(
       appBar: AppBar(
         title: _buildWeekDropdown(currentWeek),
         actions: [
@@ -520,6 +517,8 @@ class _TimetablePageState extends State<TimetablePage> {
         ],
       ),
     );
+
+    return body;
   }
 
   Widget _buildWeekDropdown(int currentWeek) {
@@ -913,13 +912,41 @@ class _TimetablePageState extends State<TimetablePage> {
           final wd = i + 1;
           final date = dateFromWeekDay(selectedWeek, wd);
           final dateStr = '${date.month}/${date.day}';
+          final isSelected = wd == selectedWeekday;
           return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: ChoiceChip(
-                label: Center(child: Text('${labels[i]} $dateStr', style: const TextStyle(fontSize: 11))),
-                selected: wd == selectedWeekday,
-                onSelected: (_) => _onWeekdayTabTap(wd),
+            child: GestureDetector(
+              onTap: () => _onWeekdayTabTap(wd),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primaryContainer
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: isSelected
+                      ? null
+                      : Border.all(color: Colors.grey.shade300, width: 0.5),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(labels[i], style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.onPrimaryContainer
+                          : Colors.black87,
+                    )),
+                    const SizedBox(height: 2),
+                    Text(dateStr, style: TextStyle(
+                      fontSize: 10,
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.7)
+                          : Colors.grey.shade500,
+                    )),
+                  ],
+                ),
               ),
             ),
           );

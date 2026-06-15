@@ -22,7 +22,7 @@ class UpdateInfo {
 class UpdateService {
   static const _repoOwner = 'chenzhuoxi';
   static const _repoName = 'GDUST_timetable_full';
-  static const _currentVersion = '1.0.8';
+  static const _currentVersion = '1.0.9';
 
   /// 检查 GitHub Releases 最新版本
   static Future<UpdateInfo> checkUpdate() async {
