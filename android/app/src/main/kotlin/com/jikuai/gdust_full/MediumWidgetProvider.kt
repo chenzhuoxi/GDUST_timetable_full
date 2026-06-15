@@ -5,7 +5,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 
 /**
- * 4×2 小组件：今日课表列表
+ * 4×2 小组件：今日课表（ListView 可滑动）
  */
 class MediumWidgetProvider : AppWidgetProvider() {
 
@@ -19,6 +19,7 @@ class MediumWidgetProvider : AppWidgetProvider() {
                 context, appWidgetManager, appWidgetId,
                 R.layout.widget_medium, "medium"
             )
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widget_medium_list)
         }
     }
 
@@ -29,6 +30,7 @@ class MediumWidgetProvider : AppWidgetProvider() {
                 val wm = AppWidgetManager.getInstance(context)
                 for (id in appWidgetIds) {
                     WidgetDataProvider.updateWidget(context, wm, id, R.layout.widget_medium, "medium")
+                    wm.notifyAppWidgetViewDataChanged(id, R.id.widget_medium_list)
                 }
             }
         } else {
@@ -44,6 +46,7 @@ class MediumWidgetProvider : AppWidgetProvider() {
             )
             for (id in ids) {
                 WidgetDataProvider.updateWidget(context, wm, id, R.layout.widget_medium, "medium")
+                wm.notifyAppWidgetViewDataChanged(id, R.id.widget_medium_list)
             }
         }
     }

@@ -5,7 +5,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 
 /**
- * 2×2 小组件：课程节数 + 最近一节课
+ * 2×2 小组件：剩余课程列表（ListView 平铺）
  */
 class CompactWidgetProvider : AppWidgetProvider() {
 
@@ -19,17 +19,18 @@ class CompactWidgetProvider : AppWidgetProvider() {
                 context, appWidgetManager, appWidgetId,
                 R.layout.widget_compact, "compact"
             )
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widget_compact_list)
         }
     }
 
     override fun onReceive(context: Context, intent: android.content.Intent) {
-        // 小米曝光刷新
         if ("miui.appwidget.action.APPWIDGET_UPDATE" == intent.action) {
             val appWidgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
             if (appWidgetIds != null) {
                 val wm = AppWidgetManager.getInstance(context)
                 for (id in appWidgetIds) {
                     WidgetDataProvider.updateWidget(context, wm, id, R.layout.widget_compact, "compact")
+                    wm.notifyAppWidgetViewDataChanged(id, R.id.widget_compact_list)
                 }
             }
         } else {
@@ -45,6 +46,7 @@ class CompactWidgetProvider : AppWidgetProvider() {
             )
             for (id in ids) {
                 WidgetDataProvider.updateWidget(context, wm, id, R.layout.widget_compact, "compact")
+                wm.notifyAppWidgetViewDataChanged(id, R.id.widget_compact_list)
             }
         }
     }

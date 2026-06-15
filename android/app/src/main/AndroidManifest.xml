@@ -47,6 +47,18 @@
             android:value="1" />
         -->
 
+        <!-- 2×2 StackView 数据服务 -->
+        <service
+            android:name=".WidgetCompactStackService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false" />
+
+        <!-- 4×2 ListView 数据服务 -->
+        <service
+            android:name=".WidgetMediumListService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false" />
+
         <!-- 2×2 紧凑小组件 -->
         <receiver
             android:name=".CompactWidgetProvider"

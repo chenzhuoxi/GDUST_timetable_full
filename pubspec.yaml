@@ -1,7 +1,7 @@
 name: gdust_full
 description: GDUST 课表查看工具 Full 版 — CAS 登录 + 自动抓取
 publish_to: 'none'
-version: 1.0.7+7
+version: 1.0.8+8
 
 environment:
   sdk: '>=2.19.6 <4.0.0'
