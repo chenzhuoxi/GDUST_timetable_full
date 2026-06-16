@@ -695,6 +695,7 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   List<Map<String, dynamic>> _mergeCourseList(List<Course> courses) {
+    courses.sort((a, b) => a.section.compareTo(b.section));
     if (!_mergeCourses) {
       return courses.map((c) => {
         'course': c,
@@ -704,7 +705,6 @@ class _TimetablePageState extends State<TimetablePage> {
       }).toList();
     }
 
-    courses.sort((a, b) => a.section.compareTo(b.section));
     final used = <int>{};
     final result = <Map<String, dynamic>>[];
     const pairs = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]];
