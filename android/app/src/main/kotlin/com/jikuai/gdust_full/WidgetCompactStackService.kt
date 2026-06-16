@@ -33,7 +33,7 @@ class WidgetCompactStackService : RemoteViewsService() {
         override fun getViewAt(position: Int): RemoteViews {
             val item = items[position]
             val views = RemoteViews(context.packageName, R.layout.widget_compact_list_item)
-            views.setTextViewText(R.id.compact_item_time, item.time)
+            views.setTextViewText(R.id.compact_item_time, "⏰ ${item.time}")
             views.setTextViewText(R.id.compact_item_name, item.name)
             views.setTextViewText(R.id.compact_item_room, item.room)
             return views

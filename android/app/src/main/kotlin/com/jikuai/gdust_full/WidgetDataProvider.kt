@@ -176,7 +176,7 @@ object WidgetDataProvider {
         return result
     }
 
-    fun loadRemainingCourseItems(context: Context): List<Triple<String, String, String>> {
+    fun loadRemainingCourseItems(context: Context, maxItems: Int = Int.MAX_VALUE): List<Triple<String, String, String>> {
         val result = mutableListOf<Triple<String, String, String>>()
         try {
             val prefs = context.getSharedPreferences("HomeWidgetPreferences", Context.MODE_PRIVATE)
@@ -189,7 +189,7 @@ object WidgetDataProvider {
             val currentWeek = (diff / 7 + 1).coerceIn(1, 20)
             val weekday = getWeekday(now)
             val courses = findTodayCourses(data, currentWeek, weekday, now)
-            val remaining = getRemainingCourses(courses)
+            val remaining = getRemainingCourses(courses).take(maxItems)
             for (c in remaining) {
                 result.add(Triple(sectionTimeShort(c.section), c.name, c.room))
             }

@@ -280,7 +280,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const _SectionHeader('关于'),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('广科课表 Full v1.0.9'),
+            title: const Text('广科课表 Full v1.0.10'),
             subtitle: const Text('点击查看 GitHub 项目'),
             onTap: () => launchUrl(
               Uri.parse('https://github.com/chenzhuoxi/GDUST_timetable_full'),
