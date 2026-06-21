@@ -21,7 +21,7 @@
 
 | 版本 | 大小 | 下载 |
 |------|------|------|
-| v1.0.6 | ~20MB | [gdust_full_v1.0.6.apk](../../releases/latest) |
+| v1.0.11 | ~20MB | [gdust_full_v1.0.11.apk](../../releases/latest) |
 
 > 包名 `com.jikuai.gdust_full`，与 Lite 版可共存。
 

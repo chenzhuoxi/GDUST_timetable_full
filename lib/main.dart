@@ -31,6 +31,12 @@ class GdustApp extends StatelessWidget {
         useMaterial3: true,
         brightness: Brightness.light,
       ),
+      darkTheme: ThemeData(
+        colorSchemeSeed: const Color(0xFF6B7FD7),
+        useMaterial3: true,
+        brightness: Brightness.dark,
+      ),
+      themeMode: ThemeMode.system,
       home: const TimetablePage(),
     );
   }
@@ -215,6 +221,7 @@ class _TimetablePageState extends State<TimetablePage> {
 
   /// Token 过期时弹出登录弹窗，直接更新 token
   Future<bool?> _showTokenUpdateDialog() async {
+    final colorScheme = Theme.of(context).colorScheme;
     final jobCtrl = TextEditingController();
     final pwdCtrl = TextEditingController();
     final codeCtrl = TextEditingController();
@@ -284,7 +291,7 @@ class _TimetablePageState extends State<TimetablePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('请重新登录以更新 Token', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                    Text('请重新登录以更新 Token', style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant)),
                     const SizedBox(height: 16),
                     TextField(
                       controller: jobCtrl,
@@ -305,14 +312,14 @@ class _TimetablePageState extends State<TimetablePage> {
                         width: double.infinity,
                         height: 56,
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade400),
+                          border: Border.all(color: colorScheme.outlineVariant),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: loadingCode
                             ? const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
                             : captchaBytes != null
                                 ? ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.memory(captchaBytes!, fit: BoxFit.contain))
-                                : const Center(child: Text('点击获取验证码', style: TextStyle(fontSize: 12, color: Colors.grey))),
+                                : Center(child: Text('点击获取验证码', style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant))),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -336,7 +343,7 @@ class _TimetablePageState extends State<TimetablePage> {
                 FilledButton(
                   onPressed: loggingIn ? null : doLogin,
                   child: loggingIn
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.onPrimary))
                       : const Text('登录'),
                 ),
               ],
@@ -522,12 +529,13 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   Widget _buildWeekDropdown(int currentWeek) {
+    final colorScheme = Theme.of(context).colorScheme;
     final maxWeek = _maxWeek();
     return DropdownButton<int>(
       value: selectedWeek,
       underline: const SizedBox.shrink(),
-      icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-      dropdownColor: Theme.of(context).colorScheme.surface,
+      icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
+      dropdownColor: colorScheme.surface,
       items: List.generate(maxWeek, (i) {
         final w = i + 1;
         final isSelected = w == selectedWeek;
@@ -545,10 +553,10 @@ class _TimetablePageState extends State<TimetablePage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: colorScheme.primary,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text('当前', style: TextStyle(fontSize: 10, color: Colors.white)),
+                  child: Text('当前', style: TextStyle(fontSize: 10, color: colorScheme.onPrimary)),
                 ),
               ],
             ],
@@ -572,6 +580,7 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   Widget _buildEmpty() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -582,7 +591,7 @@ class _TimetablePageState extends State<TimetablePage> {
             Container(
               width: 100, height: 100,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                color: colorScheme.primaryContainer.withOpacity(0.3),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -600,7 +609,7 @@ class _TimetablePageState extends State<TimetablePage> {
                   ? '用 gdust-timetable 抓取课表后\n导出 JSON 文件，再导入到这里'
                   : '这天没有课程安排，去做点喜欢的事吧',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 14, height: 1.5),
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14, height: 1.5),
             ),
             if (_loadedEmpty) ...[
               const SizedBox(height: 28),
@@ -658,15 +667,17 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   Widget _buildStatusBar() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Colors.green.shade50,
-      child: Text(_statusMsg!, style: TextStyle(color: Colors.green.shade800, fontSize: 13)),
+      color: colorScheme.tertiaryContainer,
+      child: Text(_statusMsg!, style: TextStyle(color: colorScheme.onTertiaryContainer, fontSize: 13)),
     );
   }
 
   Widget _buildCountdownCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     final cd = _nextClassCountdown!;
     final h = cd.inHours;
     final m = cd.inMinutes % 60;
@@ -678,17 +689,17 @@ class _TimetablePageState extends State<TimetablePage> {
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
+        color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('距下一节课', style: TextStyle(fontSize: 12, color: Colors.grey)),
+          Text('距下一节课', style: TextStyle(fontSize: 12, color: colorScheme.onPrimaryContainer.withOpacity(0.8))),
           const SizedBox(height: 4),
-          Text(timeStr, style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
+          Text(timeStr, style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.primary)),
           const SizedBox(height: 4),
-          Text(_nextClassName!, style: const TextStyle(fontSize: 14)),
+          Text(_nextClassName!, style: TextStyle(fontSize: 14, color: colorScheme.onPrimaryContainer)),
         ],
       ),
     );
@@ -760,6 +771,7 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   Widget _buildGridView(int week) {
+    final colorScheme = Theme.of(context).colorScheme;
     const labels = ['一', '二', '三', '四', '五', '六', '日'];
     const sectionPairs = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]];
 
@@ -817,7 +829,7 @@ class _TimetablePageState extends State<TimetablePage> {
         child: Container(
           padding: const EdgeInsets.all(8),
           child: Table(
-            border: TableBorder.all(color: Colors.grey.shade300, width: 0.5),
+            border: TableBorder.all(color: colorScheme.outlineVariant, width: 0.5),
             columnWidths: const {0: FixedColumnWidth(58)},
             defaultColumnWidth: const FixedColumnWidth(110),
             children: [
@@ -845,14 +857,14 @@ class _TimetablePageState extends State<TimetablePage> {
 
   Widget _gridHeader(String text) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
-    child: Text(text, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+    child: Text(text, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
   );
 
   Widget _sectionLabel(String text) => Container(
     padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
     alignment: Alignment.center,
-    color: Colors.grey.shade100,
-    child: Text(text, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+    child: Text(text, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
   );
 
   Widget _gridCell(Map<String, dynamic>? entry, int weekday, DateTime now, Color Function(String) courseColor) {
@@ -865,9 +877,10 @@ class _TimetablePageState extends State<TimetablePage> {
     final isPast = isToday && _isSectionPast(entry['startSection']);
     final bgColor = courseColor(course.name);
 
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(color: isPast ? Colors.grey.shade200 : bgColor),
+      decoration: BoxDecoration(color: isPast ? colorScheme.surfaceContainerHighest : bgColor),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -875,17 +888,17 @@ class _TimetablePageState extends State<TimetablePage> {
           Text('${course.name} $sectionLabel节',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12,
               decoration: isPast ? TextDecoration.lineThrough : null,
-              color: isPast ? Colors.grey : Colors.black87),
+              color: isPast ? colorScheme.onSurfaceVariant : colorScheme.onSurface),
             maxLines: 2, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 2),
           Text('${course.room}\n$startStr-$endStr',
             style: TextStyle(fontSize: 10,
-              color: isPast ? Colors.grey : Colors.black54,
+              color: isPast ? colorScheme.onSurfaceVariant : colorScheme.onSurfaceVariant,
               decoration: isPast ? TextDecoration.lineThrough : null),
             maxLines: 2, overflow: TextOverflow.ellipsis),
           if (course.teacher.isNotEmpty && course.teacher != '网络名师（超星尔雅）')
             Text(course.teacher,
-              style: TextStyle(fontSize: 9, color: isPast ? Colors.grey : Colors.black38),
+              style: TextStyle(fontSize: 9, color: colorScheme.onSurfaceVariant),
               maxLines: 1, overflow: TextOverflow.ellipsis),
         ],
       ),
@@ -904,6 +917,7 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   Widget _buildWeekdayTabs() {
+    final colorScheme = Theme.of(context).colorScheme;
     const labels = ['一', '二', '三', '四', '五', '六', '日'];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -921,12 +935,12 @@ class _TimetablePageState extends State<TimetablePage> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Theme.of(context).colorScheme.primaryContainer
+                      ? colorScheme.primaryContainer
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   border: isSelected
                       ? null
-                      : Border.all(color: Colors.grey.shade300, width: 0.5),
+                      : Border.all(color: colorScheme.outlineVariant, width: 0.5),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -935,15 +949,15 @@ class _TimetablePageState extends State<TimetablePage> {
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                       color: isSelected
-                          ? Theme.of(context).colorScheme.onPrimaryContainer
-                          : Colors.black87,
+                          ? colorScheme.onPrimaryContainer
+                          : colorScheme.onSurface,
                     )),
                     const SizedBox(height: 2),
                     Text(dateStr, style: TextStyle(
                       fontSize: 10,
                       color: isSelected
-                          ? Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.7)
-                          : Colors.grey.shade500,
+                          ? colorScheme.onPrimaryContainer.withOpacity(0.7)
+                          : colorScheme.onSurfaceVariant,
                     )),
                   ],
                 ),
@@ -956,15 +970,16 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   Widget _buildCourseListForDay(int week, int weekday) {
+    final colorScheme = Theme.of(context).colorScheme;
     final raw = _getCoursesForWeekday(week, weekday);
     if (raw.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.free_breakfast, size: 48, color: Colors.grey),
+            Icon(Icons.free_breakfast, size: 48, color: colorScheme.outline),
             const SizedBox(height: 12),
-            Text('这天没课 ☺', style: TextStyle(fontSize: 16, color: Colors.grey)),
+            Text('这天没课 ☺', style: TextStyle(fontSize: 16, color: colorScheme.onSurfaceVariant)),
           ],
         ),
       );
@@ -984,6 +999,7 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   Widget _courseCard(Map<String, dynamic> entry) {
+    final colorScheme = Theme.of(context).colorScheme;
     final course = entry['course'] as Course;
     final sectionLabel = entry['sectionLabel'] as String;
     final start = sectionStart[entry['startSection']] ?? '??:??';
@@ -991,7 +1007,7 @@ class _TimetablePageState extends State<TimetablePage> {
     final now = DateTime.now();
     final isToday = _weekdayFromDate(course.date) == now.weekday;
     final isPast = isToday && _isSectionPast(entry['startSection']);
-    final barColor = isPast ? Colors.grey : _courseColor(course.name);
+    final barColor = isPast ? colorScheme.outline : _courseColor(course.name);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -1004,14 +1020,14 @@ class _TimetablePageState extends State<TimetablePage> {
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: barColor,
-                  child: Text(sectionLabel, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                  child: Text(sectionLabel, style: TextStyle(color: colorScheme.onPrimary, fontWeight: FontWeight.bold, fontSize: 12)),
                 ),
                 title: Text(course.name, style: TextStyle(
                   fontWeight: FontWeight.bold,
                   decoration: isPast ? TextDecoration.lineThrough : null,
-                  color: isPast ? Colors.grey : null,
+                  color: isPast ? colorScheme.onSurfaceVariant : colorScheme.onSurface,
                 )),
-                subtitle: Text('$start-$end · ${course.room}\n${course.teacher}'),
+                subtitle: Text('$start-$end · ${course.room}\n${course.teacher}', style: TextStyle(color: colorScheme.onSurfaceVariant)),
                 isThreeLine: true,
               ),
             ),
