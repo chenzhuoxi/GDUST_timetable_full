@@ -235,7 +235,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: Text(
               _week1Monday != null
                   ? DateFormat('yyyy-MM-dd（E）').format(_week1Monday!)
-                  : '未设置（默认 2026-03-09）',
+                  : '未设置（默认 2026-08-31）',
             ),
             trailing: const Icon(Icons.edit),
             onTap: _pickWeek1Monday,
@@ -280,7 +280,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const _SectionHeader('关于'),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('广科课表 Full v1.0.11'),
+            title: const Text('广科课表 Full v1.0.12'),
             subtitle: const Text('点击查看 GitHub 项目'),
             onTap: () => launchUrl(
               Uri.parse('https://github.com/chenzhuoxi/GDUST_timetable_full'),

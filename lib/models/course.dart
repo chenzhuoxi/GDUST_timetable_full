@@ -61,7 +61,8 @@ const Map<int, String> sectionEnd = {
   9: '20:15', 10: '21:05',
 };
 
-DateTime week1Monday = DateTime(2026, 3, 9);
+// 2026-2027 学年第一学期第一周周一。
+DateTime week1Monday = DateTime(2026, 8, 31);
 
 int currentTeachingWeek() {
   final diff = DateTime.now().difference(week1Monday).inDays;

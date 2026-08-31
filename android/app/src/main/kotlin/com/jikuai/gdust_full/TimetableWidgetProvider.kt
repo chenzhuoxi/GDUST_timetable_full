@@ -55,12 +55,12 @@ class TimetableWidgetProvider : AppWidgetProvider() {
                     val week1Monday = if (week1MondayStr != null) {
                         try {
                             SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).parse(week1MondayStr)
-                                ?: SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-03-09")
+                                ?: SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-08-31")
                         } catch (e: Exception) {
-                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-03-09")
+                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-08-31")
                         }
                     } else {
-                        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-03-09")
+                        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-08-31")
                     }
 
                     val now = Calendar.getInstance()
