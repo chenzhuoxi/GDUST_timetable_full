@@ -881,36 +881,33 @@ class _TimetablePageState extends State<TimetablePage> {
   Widget _gridCell(Map<String, dynamic>? entry, int weekday, DateTime now, Color Function(String) courseColor, {bool compact = false}) {
     if (entry == null) return const SizedBox.shrink();
     final course = entry['course'] as Course;
-    final sectionLabel = entry['sectionLabel'] as String;
-    final startStr = sectionStart[entry['startSection']] ?? '??:??';
-    final endStr = sectionEnd[entry['endSection']] ?? '??:??';
     final isToday = _weekdayFromDate(course.date) == now.weekday;
     final isPast = isToday && _isSectionPast(entry['startSection']);
     final bgColor = courseColor(course.name);
 
+    // 格子只显示课程、教室、教师；节数看行首，时间看节次表，不重复塞入
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: EdgeInsets.all(compact ? 3 : 6),
+      padding: EdgeInsets.all(compact ? 4 : 6),
       decoration: BoxDecoration(color: isPast ? colorScheme.surfaceContainerHighest : bgColor),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('${course.name} $sectionLabel节',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: compact ? 10 : 12,
+          Text(course.name,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12,
               decoration: isPast ? TextDecoration.lineThrough : null,
               color: isPast ? colorScheme.onSurfaceVariant : colorScheme.onSurface),
-            maxLines: compact ? 3 : 2, overflow: TextOverflow.ellipsis),
-          SizedBox(height: compact ? 1 : 2),
-          // 窄列（竖屏平铺）下时间各占一行，避免被截断
-          Text(compact ? '${course.room}\n$startStr\n$endStr' : '${course.room}\n$startStr-$endStr',
-            style: TextStyle(fontSize: compact ? 8 : 10,
-              color: isPast ? colorScheme.onSurfaceVariant : colorScheme.onSurfaceVariant,
+            maxLines: 3, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 2),
+          Text(course.room,
+            style: TextStyle(fontSize: 10,
+              color: colorScheme.onSurfaceVariant,
               decoration: isPast ? TextDecoration.lineThrough : null),
-            maxLines: compact ? 3 : 2, overflow: TextOverflow.ellipsis),
+            maxLines: 2, overflow: TextOverflow.ellipsis),
           if (course.teacher.isNotEmpty && course.teacher != '网络名师（超星尔雅）')
             Text(course.teacher,
-              style: TextStyle(fontSize: compact ? 8 : 9, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant),
               maxLines: 1, overflow: TextOverflow.ellipsis),
         ],
       ),
