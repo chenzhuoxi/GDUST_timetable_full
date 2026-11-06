@@ -420,6 +420,7 @@ class _TimetablePageState extends State<TimetablePage> {
 
   void _updateCountdown() {
     if (!loaded) return;
+    if (_gridMode) return; // 网格视图不显示倒计时，跳过每秒刷新
     final now = DateTime.now();
     final week = currentTeachingWeek();
     final todayStr = DateFormat('yyyy-MM-dd').format(now);
@@ -510,7 +511,11 @@ class _TimetablePageState extends State<TimetablePage> {
           IconButton(
             icon: Icon(_gridMode ? Icons.view_list : Icons.grid_view),
             tooltip: _gridMode ? '列表视图' : '网格视图',
-            onPressed: () => setState(() => _gridMode = !_gridMode),
+            onPressed: () {
+              final toGrid = !_gridMode;
+              setState(() => _gridMode = toGrid);
+              if (!toGrid) _updateCountdown(); // 切回列表视图时刷新倒计时
+            },
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -630,10 +635,9 @@ class _TimetablePageState extends State<TimetablePage> {
 
   Widget _buildContent(int week) {
     if (_gridMode) {
+      // 平铺（网格）视图：整周一览，不显示倒计时卡片
       return Column(
         children: [
-          if (_nextClassName != null && _nextClassCountdown != null && week == currentTeachingWeek())
-            _buildCountdownCard(),
           if (_statusMsg != null) _buildStatusBar(),
           Expanded(child: _buildGridView(week)),
         ],
@@ -823,41 +827,48 @@ class _TimetablePageState extends State<TimetablePage> {
       return HSLColor.fromAHSL(0.12, hue, 0.55, 0.92).toColor();
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          child: Table(
-            border: TableBorder.all(color: colorScheme.outlineVariant, width: 0.5),
-            columnWidths: const {0: FixedColumnWidth(58)},
-            defaultColumnWidth: const FixedColumnWidth(110),
-            children: [
-              TableRow(
-                decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 竖屏自适应：7 列（周一~周日）平铺铺满可用宽度；最宽 110，过窄时保留横向滚动兜底
+        final dayWidth = ((constraints.maxWidth - 16 - 58) / 7).clamp(40.0, 110.0);
+        final compact = dayWidth < 80;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              child: Table(
+                border: TableBorder.all(color: colorScheme.outlineVariant, width: 0.5),
+                columnWidths: const {0: FixedColumnWidth(58)},
+                defaultColumnWidth: FixedColumnWidth(dayWidth),
                 children: [
-                  _gridHeader('节'),
-                  for (final l in labels) _gridHeader(l),
+                  TableRow(
+                    decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
+                    children: [
+                      _gridHeader('节', compact: compact),
+                      for (final l in labels) _gridHeader(l, compact: compact),
+                    ],
+                  ),
+                  for (final key in rowKeys)
+                    TableRow(
+                      children: [
+                        _sectionLabel(key),
+                        for (int wd = 1; wd <= 7; wd++)
+                          _gridCell(grid[key]![wd], wd, now, courseColor, compact: compact),
+                      ],
+                    ),
                 ],
               ),
-              for (final key in rowKeys)
-                TableRow(
-                  children: [
-                    _sectionLabel(key),
-                    for (int wd = 1; wd <= 7; wd++)
-                      _gridCell(grid[key]![wd], wd, now, courseColor),
-                  ],
-                ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _gridHeader(String text) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
-    child: Text(text, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
+  Widget _gridHeader(String text, {bool compact = false}) => Padding(
+    padding: EdgeInsets.symmetric(vertical: compact ? 8 : 10, horizontal: 2),
+    child: Text(text, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: compact ? 12 : 14, color: Theme.of(context).colorScheme.onSurface)),
   );
 
   Widget _sectionLabel(String text) => Container(
@@ -867,7 +878,7 @@ class _TimetablePageState extends State<TimetablePage> {
     child: Text(text, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
   );
 
-  Widget _gridCell(Map<String, dynamic>? entry, int weekday, DateTime now, Color Function(String) courseColor) {
+  Widget _gridCell(Map<String, dynamic>? entry, int weekday, DateTime now, Color Function(String) courseColor, {bool compact = false}) {
     if (entry == null) return const SizedBox.shrink();
     final course = entry['course'] as Course;
     final sectionLabel = entry['sectionLabel'] as String;
@@ -879,26 +890,27 @@ class _TimetablePageState extends State<TimetablePage> {
 
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: EdgeInsets.all(compact ? 3 : 6),
       decoration: BoxDecoration(color: isPast ? colorScheme.surfaceContainerHighest : bgColor),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('${course.name} $sectionLabel节',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: compact ? 10 : 12,
               decoration: isPast ? TextDecoration.lineThrough : null,
               color: isPast ? colorScheme.onSurfaceVariant : colorScheme.onSurface),
-            maxLines: 2, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 2),
-          Text('${course.room}\n$startStr-$endStr',
-            style: TextStyle(fontSize: 10,
+            maxLines: compact ? 3 : 2, overflow: TextOverflow.ellipsis),
+          SizedBox(height: compact ? 1 : 2),
+          // 窄列（竖屏平铺）下时间各占一行，避免被截断
+          Text(compact ? '${course.room}\n$startStr\n$endStr' : '${course.room}\n$startStr-$endStr',
+            style: TextStyle(fontSize: compact ? 8 : 10,
               color: isPast ? colorScheme.onSurfaceVariant : colorScheme.onSurfaceVariant,
               decoration: isPast ? TextDecoration.lineThrough : null),
-            maxLines: 2, overflow: TextOverflow.ellipsis),
+            maxLines: compact ? 3 : 2, overflow: TextOverflow.ellipsis),
           if (course.teacher.isNotEmpty && course.teacher != '网络名师（超星尔雅）')
             Text(course.teacher,
-              style: TextStyle(fontSize: 9, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(fontSize: compact ? 8 : 9, color: colorScheme.onSurfaceVariant),
               maxLines: 1, overflow: TextOverflow.ellipsis),
         ],
       ),
